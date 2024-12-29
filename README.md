@@ -1,6 +1,6 @@
 # Bundle Size Tracker
 
-[![npm version](https://badge.fury.io/js/bundle-size-tracker.svg)](https://badge.fury.io/js/bundle-size-tracker)
+[![npm version](https://badge.fury.io/js/%40avixiii%2Fbundle-size-tracker.svg)](https://www.npmjs.com/package/@avixiii/bundle-size-tracker)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
@@ -25,11 +25,11 @@ A powerful and flexible tool to track and analyze JavaScript bundle sizes across
 ## Installation
 
 ```bash
-npm install bundle-size-tracker --save-dev
+npm install @avixiii/bundle-size-tracker --save-dev
 # or
-yarn add -D bundle-size-tracker
+yarn add -D @avixiii/bundle-size-tracker
 # or
-pnpm add -D bundle-size-tracker
+pnpm add -D @avixiii/bundle-size-tracker
 ```
 
 ## Quick Start
@@ -38,7 +38,7 @@ pnpm add -D bundle-size-tracker
 
 ```javascript
 // webpack.config.js
-const { BundleSizeTrackerPlugin } = require('bundle-size-tracker');
+const { BundleSizeTrackerPlugin } = require('@avixiii/bundle-size-tracker');
 
 module.exports = {
   // ... other config
@@ -56,7 +56,7 @@ module.exports = {
 
 ```javascript
 // rollup.config.js
-import { bundleSizeTracker } from 'bundle-size-tracker';
+import { bundleSizeTracker } from '@avixiii/bundle-size-tracker';
 
 export default {
   // ... other config
@@ -73,7 +73,7 @@ export default {
 
 ```javascript
 // vite.config.js
-import { bundleSizeTrackerVite } from 'bundle-size-tracker';
+import { bundleSizeTrackerVite } from '@avixiii/bundle-size-tracker';
 
 export default {
   plugins: [
@@ -89,10 +89,10 @@ export default {
 
 ```bash
 # Check bundle sizes in a directory
-npx bundle-size-tracker --max-size 500 --output html --dir ./dist
+npx @avixiii/bundle-size-tracker --max-size 500 --output html --dir ./dist
 
 # With custom configuration
-npx bundle-size-tracker --config bundle-size.config.js
+npx @avixiii/bundle-size-tracker --config bundle-size.config.js
 ```
 
 ## Configuration Options
@@ -153,7 +153,7 @@ jobs:
         run: npm run build
       
       - name: Check bundle size
-        run: npx bundle-size-tracker --max-size 500 --output json
+        run: npx @avixiii/bundle-size-tracker --max-size 500 --output json
         # Will exit with code 1 if any bundle exceeds the limit
 ```
 
@@ -162,7 +162,7 @@ jobs:
 You can also use the analyzer programmatically:
 
 ```typescript
-import { BundleSizeAnalyzer } from 'bundle-size-tracker';
+import { BundleSizeAnalyzer } from '@avixiii/bundle-size-tracker';
 
 const analyzer = new BundleSizeAnalyzer({
   maxSize: 500,
