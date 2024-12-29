@@ -1,17 +1,23 @@
 {
-  "name": "bundle-size-tracker",
+  "name": "@avixiii/bundle-size-tracker",
   "version": "1.0.0",
-  "description": "Track and analyze bundle sizes for JavaScript/TypeScript projects",
+  "description": "A powerful and flexible tool to track and analyze JavaScript bundle sizes across different build tools",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "module",
   "bin": {
-    "bundle-size-tracker": "./dist/cli.js"
+    "bundle-size-tracker": "dist/cli.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "jest",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint . --ext .ts",
+    "prepublishOnly": "npm run build",
     "prepare": "npm run build"
   },
   "keywords": [
@@ -21,45 +27,45 @@
     "webpack",
     "rollup",
     "vite",
+    "analysis",
     "performance"
   ],
-  "author": "",
+  "author": "avixiii-dev",
   "license": "MIT",
-  "devDependencies": {
-    "@types/jest": "^29.0.0",
-    "@types/node": "^20.0.0",
-    "@types/webpack": "^5.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.0.0",
-    "jest": "^29.0.0",
-    "ts-jest": "^29.0.0",
-    "typescript": "^5.0.0",
-    "webpack": "^5.0.0",
-    "rollup": "^3.0.0",
-    "vite": "^4.0.0"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/avixiii-dev/bundle-size-tracker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/avixiii-dev/bundle-size-tracker/issues"
+  },
+  "homepage": "https://github.com/avixiii-dev/bundle-size-tracker#readme",
+  "peerDependencies": {
+    "rollup": "^4.0.0",
+    "vite": "^5.0.0",
+    "webpack": "^5.0.0"
   },
   "dependencies": {
+    "commander": "^11.1.0",
+    "filesize": "^10.1.0",
     "@types/glob": "^8.0.0",
     "chalk": "^4.1.2",
-    "commander": "^11.0.0",
-    "filesize": "^10.0.0",
     "glob": "^10.0.0"
   },
-  "peerDependencies": {
-    "webpack": ">=5.0.0",
-    "rollup": ">=3.0.0",
-    "vite": ">=4.0.0"
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.6",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "rollup": "^4.9.1",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.10",
+    "webpack": "^5.89.0"
   },
-  "peerDependenciesMeta": {
-    "webpack": {
-      "optional": true
-    },
-    "rollup": {
-      "optional": true
-    },
-    "vite": {
-      "optional": true
-    }
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
