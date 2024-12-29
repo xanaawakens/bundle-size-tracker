@@ -1,11 +1,11 @@
-import type { Plugin } from 'vite';
+import type { Plugin, ResolvedConfig } from 'vite';
 import * as path from 'node:path';
 import type { BundleSizeTrackerOptions } from '../types/index.js';
 import { BundleSizeAnalyzer } from '../core/analyzer.js';
 
 export function bundleSizeTrackerVite(options: BundleSizeTrackerOptions = {}): Plugin {
   const analyzer = new BundleSizeAnalyzer(options);
-  let config: any;
+  let config: ResolvedConfig;
   
   return {
     name: 'bundle-size-tracker',

@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { filesize } from 'filesize';
 import chalk from 'chalk';
-import type { BundleSizeTrackerOptions, BundleInfo, BundleReport, BundleRule } from '../types';
+import type { BundleSizeTrackerOptions, BundleInfo, BundleReport } from '../types';
 
 export class BundleSizeAnalyzer {
   private options: Required<BundleSizeTrackerOptions>;
