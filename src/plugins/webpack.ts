@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import type { BundleSizeTrackerOptions } from '../types/index.js';
 import { BundleSizeAnalyzer } from '../core/analyzer.js';
 
-export class BundleSizeTrackerPlugin {
+class BundleSizeTrackerPlugin {
   private analyzer: BundleSizeAnalyzer;
 
   constructor(options: BundleSizeTrackerOptions = {}) {
@@ -21,12 +21,14 @@ export class BundleSizeTrackerPlugin {
           path.resolve(outputPath, name)
         );
 
-        try {
-          await this.analyzer.analyzeBundles(files);
-        } catch (error) {
-          console.error('Bundle size analysis failed:', error);
-        }
+        await this.analyzer.analyzeBundles(files);
       }
     );
   }
 }
+
+export const bundleSizeTrackerWebpack = (options: BundleSizeTrackerOptions = {}): BundleSizeTrackerPlugin => {
+  return new BundleSizeTrackerPlugin(options);
+};
+
+export { BundleSizeTrackerPlugin };
