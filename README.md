@@ -1,6 +1,6 @@
 # Bundle Size Tracker
 
-[![npm version](https://badge.fury.io/js/%40avixiii%2Fbundle-size-tracker.svg)](https://www.npmjs.com/package/@avixiii/bundle-size-tracker)
+[![npm version](https://badge.fury.io/js/@avixiii%2Fbundle-size-tracker.svg)](https://badge.fury.io/js/@avixiii%2Fbundle-size-tracker)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
