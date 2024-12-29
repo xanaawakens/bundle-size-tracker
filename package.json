@@ -1,6 +1,6 @@
 {
   "name": "@avixiii/bundle-size-tracker",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A powerful and flexible tool to track and analyze JavaScript bundle sizes across different build tools",
   "type": "module",
   "main": "dist/index.js",
