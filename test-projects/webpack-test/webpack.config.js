@@ -1,17 +1,16 @@
-const path = require('path');
-const { BundleSizeTrackerPlugin } = require('../../dist');
+import path from 'path';
+import { bundleSizeTrackerWebpack } from '../../dist/index.js';
 
-module.exports = {
+export default {
   entry: './src/index.js',
   output: {
     filename: 'main.js',
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(process.cwd(), 'dist'),
   },
   plugins: [
-    new BundleSizeTrackerPlugin({
-      maxSize: 500, // 500KB
-      outputFormat: 'html',
-      outputPath: './bundle-report'
+    bundleSizeTrackerWebpack({
+      maxSize: '100KB',
+      warningSize: '50KB'
     })
   ]
 };
