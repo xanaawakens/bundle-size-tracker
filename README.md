@@ -17,6 +17,9 @@ A powerful and flexible tool to track and analyze JavaScript bundle sizes across
   - Console output
   - JSON reports
   - HTML reports with visualizations
+- File compression analysis:
+  - Gzip compression
+  - Brotli compression
 - Custom size limits per bundle
 - Easy CI/CD integration
 - Full TypeScript support

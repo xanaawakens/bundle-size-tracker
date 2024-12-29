@@ -21,6 +21,15 @@ export interface BundleSizeTrackerOptions {
    * Custom rules for specific bundles
    */
   rules?: BundleRule[];
+
+  /**
+   * Enable compression analysis
+   * @default true
+   */
+  compression?: boolean | {
+    gzip?: boolean;
+    brotli?: boolean;
+  };
 }
 
 export interface BundleRule {
@@ -28,38 +37,53 @@ export interface BundleRule {
    * Pattern to match bundle names
    */
   pattern: string | RegExp;
-  
+
   /**
-   * Maximum size in KB for matched bundles
+   * Maximum allowed size in KB
    */
   maxSize: number;
+
+  /**
+   * Maximum allowed compressed size in KB
+   */
+  maxCompressedSize?: number;
+}
+
+export interface BundleSize {
+  raw: number;
+  gzip?: number;
+  brotli?: number;
 }
 
 export interface BundleInfo {
   /**
-   * Name of the bundle file
+   * Bundle file name
    */
   name: string;
 
   /**
-   * Size of the bundle in bytes
+   * Bundle sizes (raw and compressed)
    */
-  size: number;
+  size: BundleSize;
 
   /**
-   * Whether the bundle exceeds its size limit
+   * Whether the bundle exceeds size limits
    */
   exceedsLimit: boolean;
 
   /**
-   * The applicable size limit in KB
+   * Size limits in KB
    */
-  sizeLimit: number;
+  sizeLimit: {
+    raw: number;
+    gzip?: number;
+    brotli?: number;
+  };
 }
 
 export interface BundleReport {
   /**
-   * Timestamp of the report
+   * Report generation timestamp
    */
   timestamp: string;
 
@@ -69,12 +93,12 @@ export interface BundleReport {
   bundles: BundleInfo[];
 
   /**
-   * Overall status of size checks
+   * Overall status
    */
   status: 'pass' | 'fail';
 
   /**
-   * Total size of all bundles
+   * Total sizes
    */
-  totalSize: number;
+  totalSize: BundleSize;
 }
