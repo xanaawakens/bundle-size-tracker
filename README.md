@@ -1,8 +1,10 @@
 # Bundle Size Tracker
 
-[![npm version](https://badge.fury.io/js/@avixiii%2Fbundle-size-tracker.svg)](https://badge.fury.io/js/@avixiii%2Fbundle-size-tracker)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
+[![NPM VERSION](https://img.shields.io/npm/v/@avixiii/bundle-size-tracker)](https://www.npmjs.com/package/@avixiii/bundle-size-tracker)
+![NPM TOTAL DOWNLOADS](https://img.shields.io/npm/dt/@avixiii/bundle-size-tracker)
+[![LICENSE: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TYPESCRIPT READY](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
+
 
 A powerful and flexible tool to track and analyze JavaScript bundle sizes across different build tools. Monitor your bundle sizes, set size limits, and get detailed reports with AI-powered optimization suggestions.
 
@@ -210,40 +212,6 @@ You can set specific size limits for different bundles:
 | `model` | string | 'gpt-3.5-turbo' | OpenAI model to use |
 | `temperature` | number | 0.7 | Model temperature |
 
-## CI/CD Integration
-
-Create `.github/workflows/bundle-size.yml`:
-
-```yaml
-name: Bundle Size Check
-
-on:
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  check-bundle-size:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Build
-        run: npm run build
-      
-      - name: Check bundle size
-        run: npx @avixiii/bundle-size-tracker --max-size 500
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-```
 
 ## Programmatic Usage
 
@@ -467,7 +435,6 @@ npm test -- --coverage
 - Basic bundle size tracking
 - Size limits and warnings
 - Compression format support
-- CI/CD integration
 - Basic reporting features
 - Command-line interface
 - Configuration options
