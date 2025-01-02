@@ -24,6 +24,7 @@ A powerful and flexible tool to track and analyze JavaScript bundle sizes across
 - Easy CI/CD integration
 - Full TypeScript support
 - Configurable alerts and warnings
+- AI-powered bundle optimization suggestions
 
 ## Installation
 
@@ -123,6 +124,85 @@ You can set specific size limits for different bundles:
       maxSize: 200 // 200KB limit for main bundle
     }
   ]
+}
+```
+
+## AI-Powered Bundle Optimization
+
+This package now includes AI-powered bundle analysis and optimization suggestions powered by OpenAI's GPT models. This feature provides:
+
+- Intelligent code splitting suggestions
+- Tree shaking optimization opportunities
+- Smart dependency analysis
+- Performance impact predictions
+
+### Setup AI Features
+
+1. Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
+
+2. Add your OpenAI API key to `.env`:
+```env
+OPENAI_API_KEY=your_api_key_here
+```
+
+3. Configure AI options in your build config:
+
+```javascript
+// webpack.config.js
+module.exports = {
+  plugins: [
+    bundleSizeTrackerWebpack({
+      // ... other options
+      ai: {
+        enabled: true,
+        model: 'gpt-4', // optional
+        temperature: 0.7 // optional
+      }
+    })
+  ]
+};
+```
+
+### AI Analysis Results
+
+The AI analysis provides detailed insights including:
+
+- Specific code splitting points with estimated impact
+- Unused exports that can be safely removed
+- Bundle size optimization recommendations
+- Performance improvement estimates
+
+Example output:
+```json
+{
+  "aiAnalysis": {
+    "optimizations": [
+      "Split vendor chunks for better caching",
+      "Remove unused moment.js locales",
+      "Implement dynamic imports for route components"
+    ],
+    "impact": {
+      "sizeReduction": 152000,
+      "performanceImprovement": 35
+    },
+    "codeSplitting": {
+      "splitPoints": [
+        "src/routes/admin/*",
+        "src/components/charts/*"
+      ]
+    },
+    "treeShaking": {
+      "unusedExports": [
+        {
+          "module": "@material-ui/icons",
+          "exports": ["UnusedIcon1", "UnusedIcon2"]
+        }
+      ]
+    }
+  }
 }
 ```
 

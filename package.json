@@ -49,8 +49,10 @@
     "@types/glob": "^8.0.0",
     "chalk": "^4.1.2",
     "commander": "^11.0.0",
+    "dotenv": "^16.0.3",
     "filesize": "^10.0.0",
-    "glob": "^10.0.0"
+    "glob": "^10.0.0",
+    "openai": "^4.0.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.11",

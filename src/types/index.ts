@@ -81,6 +81,64 @@ export interface BundleInfo {
   };
 }
 
+export interface AIAnalysisResult {
+  /**
+   * List of suggested optimizations
+   */
+  optimizations: string[];
+
+  /**
+   * Estimated impact of optimizations
+   */
+  impact: {
+    /**
+     * Estimated size reduction in bytes
+     */
+    sizeReduction: number;
+
+    /**
+     * Estimated performance improvement percentage
+     */
+    performanceImprovement: number;
+  };
+
+  /**
+   * Code splitting suggestions
+   */
+  codeSplitting?: {
+    /**
+     * Suggested split points
+     */
+    splitPoints: string[];
+    
+    /**
+     * Estimated impact per split
+     */
+    impact: Array<{
+      path: string;
+      sizeReduction: number;
+    }>;
+  };
+
+  /**
+   * Tree shaking opportunities
+   */
+  treeShaking?: {
+    /**
+     * Unused exports that can be removed
+     */
+    unusedExports: Array<{
+      module: string;
+      exports: string[];
+    }>;
+    
+    /**
+     * Estimated size savings
+     */
+    potentialSavings: number;
+  };
+}
+
 export interface BundleReport {
   /**
    * Report generation timestamp
@@ -101,4 +159,9 @@ export interface BundleReport {
    * Total sizes
    */
   totalSize: BundleSize;
+
+  /**
+   * AI-powered analysis results
+   */
+  aiAnalysis?: AIAnalysisResult;
 }
