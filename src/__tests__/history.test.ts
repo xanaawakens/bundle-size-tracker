@@ -2,6 +2,7 @@ import { BundleSizeHistory } from '../plugins/history';
 import { mkdir, writeFile, rm } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
+import { ExportData } from '../types/history';
 
 describe('BundleSizeHistory', () => {
   let history: BundleSizeHistory;
