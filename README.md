@@ -36,7 +36,19 @@ A powerful and flexible tool to track and analyze JavaScript bundle sizes across
 - Performance impact predictions
 - Automated optimization suggestions
 
-### Performance Features ⚡️ (New in v0.1.2)
+### History and Alerts 📊 (New in v0.1.3)
+- Track bundle size changes over time
+- Export and import history data
+- Interactive size visualizations
+- Configurable alerts for:
+  - Total size increases
+  - Individual chunk size changes
+  - Maximum size thresholds
+- Beautiful HTML reports with charts
+- Historical trend analysis
+- Size comparison across builds
+
+### Performance Features ⚡️
 - Preact compatibility layer for React apps
 - Optimized chunk splitting strategies
 - Advanced tree shaking configuration
@@ -68,7 +80,14 @@ module.exports = {
     new BundleSizeTrackerPlugin({
       maxSize: 500, // 500KB limit
       outputFormat: 'html',
-      outputPath: './reports'
+      outputPath: './reports',
+      history: {
+        enabled: true,
+        thresholds: {
+          totalSizeIncreaseThreshold: 10, // 10% increase warning
+          maxTotalSize: 5 * 1024 * 1024 // 5MB limit
+        }
+      }
     })
   ]
 };
@@ -85,7 +104,13 @@ export default {
   plugins: [
     bundleSizeTracker({
       maxSize: 300,
-      outputFormat: 'json'
+      outputFormat: 'json',
+      history: {
+        enabled: true,
+        thresholds: {
+          chunkSizeIncreaseThreshold: 15 // 15% chunk size increase warning
+        }
+      }
     })
   ]
 };
@@ -101,76 +126,35 @@ export default {
   plugins: [
     bundleSizeTrackerVite({
       maxSize: 400,
-      outputFormat: 'console'
-    })
-  ]
-};
-```
-
-### With AI Analysis
-
-```javascript
-// webpack.config.js
-const { BundleSizeTrackerPlugin } = require('@avixiii/bundle-size-tracker');
-
-module.exports = {
-  plugins: [
-    new BundleSizeTrackerPlugin({
-      maxSize: 500,
-      ai: {
+      history: {
         enabled: true,
-        model: 'gpt-3.5-turbo',
-        temperature: 0.7
+        exportPath: './bundle-history'
       }
     })
   ]
 };
 ```
 
-### Environment Setup
+## Configuration
 
-Create a `.env` file:
-
-```env
-OPENAI_API_KEY=your_api_key
-OPENAI_MODEL=gpt-3.5-turbo
-AI_TEMPERATURE=0.7
-```
-
-## CLI Usage
-
-```bash
-# Basic usage
-npx @avixiii/bundle-size-tracker --max-size 500
-
-# With custom config
-npx @avixiii/bundle-size-tracker --config bundle-size.config.js
-
-# Generate HTML report
-npx @avixiii/bundle-size-tracker --output html --dir ./dist
-
-# With AI analysis
-npx @avixiii/bundle-size-tracker --ai-enabled --max-size 500
-
-# Check bundle sizes in a directory
-npx @avixiii/bundle-size-tracker --max-size 500 --output html --dir ./dist
-
-# With custom configuration
-npx @avixiii/bundle-size-tracker --config bundle-size.config.js
-```
-
-## Configuration Options
-
-### Basic Options
+### History Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `maxSize` | number | 500 | Maximum allowed size in KB |
-| `outputFormat` | 'console' \| 'json' \| 'html' | 'console' | Report format |
-| `outputPath` | string | './report' | Output directory for reports |
-| `compression` | boolean \| object | true | Enable/configure compression |
-| `rules` | Rule[] | [] | Custom rules for specific bundles |
-| `ai` | AIConfig | undefined | AI analysis configuration |
+| `history.enabled` | boolean | `false` | Enable history tracking |
+| `history.maxEntries` | number | `100` | Maximum number of history entries to keep |
+| `history.thresholds.totalSizeIncreaseThreshold` | number | `10` | Percentage threshold for total size increase warning |
+| `history.thresholds.chunkSizeIncreaseThreshold` | number | `15` | Percentage threshold for chunk size increase warning |
+| `history.thresholds.maxTotalSize` | number | `5242880` | Maximum allowed total size in bytes (5MB) |
+| `history.thresholds.maxChunkSize` | number | `2097152` | Maximum allowed chunk size in bytes (2MB) |
+
+### AI Configuration
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ai.enabled` | boolean | `false` | Enable AI analysis |
+| `ai.model` | string | `'gpt-3.5-turbo'` | OpenAI model to use |
+| `ai.temperature` | number | `0.7` | Model temperature |
 
 ### Compression Options
 
@@ -204,78 +188,6 @@ You can set specific size limits for different bundles:
 }
 ```
 
-### AI Configuration
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `enabled` | boolean | false | Enable AI analysis |
-| `model` | string | 'gpt-3.5-turbo' | OpenAI model to use |
-| `temperature` | number | 0.7 | Model temperature |
-
-
-## Programmatic Usage
-
-You can use the analyzer programmatically in different ways:
-
-### Basic Usage
-
-```typescript
-import { BundleSizeAnalyzer } from '@avixiii/bundle-size-tracker';
-
-const analyzer = new BundleSizeAnalyzer({
-  maxSize: 500,
-  outputFormat: 'json',
-  outputPath: './reports'
-});
-
-// Analyze specific files
-await analyzer.analyzeBundles([
-  'dist/main.js',
-  'dist/vendor.js'
-]);
-```
-
-### With AI Analysis
-
-```typescript
-import { BundleSizeAnalyzer } from '@avixiii/bundle-size-tracker';
-
-const analyzer = new BundleSizeAnalyzer({
-  maxSize: 500,
-  outputFormat: 'json',
-  outputPath: './reports',
-  ai: {
-    enabled: true,
-    model: 'gpt-3.5-turbo'
-  }
-});
-
-// Get AI-powered suggestions
-const analysis = await analyzer.analyzeWithAI([
-  'dist/main.js',
-  'dist/vendor.js'
-]);
-```
-
-### Custom Rules
-
-```typescript
-import { BundleSizeAnalyzer } from '@avixiii/bundle-size-tracker';
-
-const analyzer = new BundleSizeAnalyzer({
-  rules: [
-    {
-      pattern: /vendor\..+\.js$/,
-      maxSize: 800
-    }
-  ],
-  outputFormat: 'html'
-});
-
-// Analyze with custom rules
-const results = await analyzer.analyze();
-```
-
 ## Report Examples
 
 ### Console Output
@@ -283,7 +195,7 @@ const results = await analyzer.analyze();
 Bundle Size Report
 
 Generated: 2025-01-02T04:12:22.777Z
-Status: PASS ✅
+Status: PASS 
 Total Size: 264.09 KB
 
 main.js
@@ -415,6 +327,15 @@ npm test -- --coverage
 ```
 
 ## Changelog
+
+### v0.1.3 (2025-01-02)
+- Added history tracking feature
+- Added alerts for total size increases and chunk size changes
+- Improved HTML reports with interactive charts
+- Enhanced AI-powered optimization suggestions
+- Added new CLI options for history and alerts
+- Improved error handling and reporting
+- Updated dependencies to latest versions
 
 ### v0.1.2 (2025-01-02)
 - Added AI-powered bundle analysis
