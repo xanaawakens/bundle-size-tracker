@@ -3,7 +3,6 @@ import { join } from 'path';
 import { BundleStats } from '../../types/history';
 
 export class BundleVisualizer {
-  private readonly templatePath: string;
   private readonly outputPath: string;
 
   constructor(outputDir: string) {
