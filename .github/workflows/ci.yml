@@ -33,14 +33,15 @@ jobs:
     - name: Run tests with coverage
       run: npm run test:coverage
       
-    - name: Upload coverage reports
+    - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage/lcov.info
         flags: unittests
         name: codecov-umbrella
-        fail_ci_if_error: true
+        fail_ci_if_error: false
+        verbose: true
 
   build:
     needs: test
