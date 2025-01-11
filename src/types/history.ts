@@ -1,49 +1,33 @@
+export interface ModuleInfo {
+  name: string;
+  size: number;
+  path: string;
+}
+
+export interface ChunkInfo {
+  name: string;
+  size: number;
+  modules: ModuleInfo[];
+}
+
 export interface BundleStats {
   totalSize: number;
   gzipSize: number;
   brotliSize: number;
-  chunks: {
-    name: string;
-    size: number;
-    modules: {
-      name: string;
-      size: number;
-    }[];
-  }[];
-  [key: string]: any;
-}
-
-export interface HistoryOptions {
-  historyDir?: string;
-  maxEntries?: number;
-}
-
-export interface TrendAnalysis {
-  trend: 'increasing' | 'decreasing' | 'stable';
-  percentageChange: number;
-  averageSize: number;
-  recommendations: string[];
+  chunks: ChunkInfo[];
+  timestamp?: string;
 }
 
 export interface HistoryQuery {
-  // Time range
   startDate?: Date;
   endDate?: Date;
-  
-  // Size filters
   minSize?: number;
   maxSize?: number;
-  
-  // Chunk filters
   chunkNames?: string[];
-  
-  // Pagination
-  limit?: number;
-  offset?: number;
-  
-  // Sorting
   sortBy?: 'date' | 'totalSize' | 'gzipSize' | 'brotliSize';
   sortOrder?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
 }
 
 export interface HistoryQueryResult {
@@ -99,4 +83,10 @@ export interface ImportResult {
   message: string;
   entriesImported: number;
   alerts: Alert[];
+}
+
+export interface ErrorResult {
+  success: false;
+  error: Error;
+  message: string;
 }

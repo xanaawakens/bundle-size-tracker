@@ -1,5 +1,4 @@
 import { BundleSizeHistory } from '../plugins/history';
-import { BundleStats } from '../types/history';
 import { mkdir, writeFile, rm } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
