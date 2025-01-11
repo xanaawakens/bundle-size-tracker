@@ -1,10 +1,10 @@
-name: CI/CD
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, develop ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, develop ]
   release:
     types: [created]
 
@@ -23,78 +23,86 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    
-    - name: Clean install dependencies
-      run: |
-        rm -f package-lock.json
-        npm install
-    
-    - name: Run linter
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run linting
       run: npm run lint
-    
-    - name: Run tests
-      run: npm test
-    
-    - name: Build
-      run: npm run build
+      
+    - name: Run tests with coverage
+      run: npm run test:coverage
+      
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
 
-  test-integration:
+  build:
     needs: test
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        test-project: [webpack-test, rollup-test, vite-test]
-
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
+    
     steps:
     - uses: actions/checkout@v3
     
-    - name: Use Node.js 18
+    - name: Use Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18'
+        node-version: '18.x'
         cache: 'npm'
-    
-    - name: Install package dependencies
-      run: |
-        rm -f package-lock.json
-        npm install
-    
+        
+    - name: Install dependencies
+      run: npm ci
+      
     - name: Build package
       run: npm run build
-    
-    - name: Install test project dependencies
-      working-directory: test-projects/${{ matrix.test-project }}
-      run: |
-        rm -f package-lock.json
-        npm install
-    
-    - name: Build test project
-      working-directory: test-projects/${{ matrix.test-project }}
-      run: npm run build
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: dist/
+        retention-days: 5
 
   publish:
-    needs: [test, test-integration]
+    needs: [test, build]
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && github.event.action == 'created'
-
+    
     steps:
     - uses: actions/checkout@v3
     
-    - name: Use Node.js 18
+    - name: Use Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18'
+        node-version: '18.x'
         registry-url: 'https://registry.npmjs.org'
-    
+        
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: dist
+        path: dist/
+        
     - name: Install dependencies
-      run: |
-        rm -f package-lock.json
-        npm install
-    
-    - name: Build
-      run: npm run build
-    
-    - name: Publish to npm
+      run: npm ci
+      
+    - name: Publish to NPM
       run: npm publish --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/*
+          README.md
+          LICENSE
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
