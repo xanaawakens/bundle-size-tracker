@@ -61,3 +61,42 @@ export interface HistoryQueryResult {
     totalEntries: number;
   };
 }
+
+export interface AlertThresholds {
+  // Percentage thresholds
+  totalSizeIncreaseThreshold: number;  // e.g., 10 for 10%
+  chunkSizeIncreaseThreshold: number;  // e.g., 15 for 15%
+  
+  // Absolute size thresholds (in bytes)
+  maxTotalSize: number;                // e.g., 5MB = 5 * 1024 * 1024
+  maxChunkSize: number;                // e.g., 2MB = 2 * 1024 * 1024
+}
+
+export interface Alert {
+  type: 'total-size-increase' | 'chunk-size-increase' | 'max-size-exceeded' | 'max-chunk-size-exceeded';
+  severity: 'warning' | 'error';
+  message: string;
+  details: {
+    timestamp: string;
+    previousValue?: number;
+    currentValue: number;
+    threshold: number;
+    percentageChange?: number;
+    chunkName?: string;
+  };
+}
+
+export interface ExportData {
+  version: string;
+  exportDate: string;
+  history: (BundleStats & { timestamp: string })[];
+  alerts: Alert[];
+  thresholds: AlertThresholds;
+}
+
+export interface ImportResult {
+  success: boolean;
+  message: string;
+  entriesImported: number;
+  alerts: Alert[];
+}
