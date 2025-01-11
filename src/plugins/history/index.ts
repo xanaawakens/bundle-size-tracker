@@ -1,12 +1,31 @@
 import { writeFile, readFile, mkdir } from 'fs/promises';
 import { join, isAbsolute } from 'path';
-import { BundleStats, HistoryOptions, TrendAnalysis, HistoryQuery, HistoryQueryResult } from '../../types/history';
+import { 
+  BundleStats, 
+  HistoryOptions, 
+  TrendAnalysis, 
+  HistoryQuery, 
+  HistoryQueryResult,
+  Alert,
+  AlertThresholds,
+  ExportData,
+  ImportResult
+} from '../../types/history';
 import { BundleVisualizer } from './visualization';
+
+const DEFAULT_THRESHOLDS: AlertThresholds = {
+  totalSizeIncreaseThreshold: 10, // 10%
+  chunkSizeIncreaseThreshold: 15, // 15%
+  maxTotalSize: 5 * 1024 * 1024, // 5MB
+  maxChunkSize: 2 * 1024 * 1024  // 2MB
+};
 
 export class BundleSizeHistory {
   private historyPath: string;
   private options: Required<HistoryOptions>;
   private visualizer: BundleVisualizer;
+  private thresholds: AlertThresholds;
+  private alerts: Alert[] = [];
 
   constructor(options: HistoryOptions = {}) {
     this.options = {
@@ -14,11 +33,11 @@ export class BundleSizeHistory {
       maxEntries: 100,
       ...options
     };
-    // If historyDir is absolute path, use it directly
     this.historyPath = isAbsolute(this.options.historyDir)
       ? this.options.historyDir
       : join(process.cwd(), this.options.historyDir);
     this.visualizer = new BundleVisualizer(this.historyPath);
+    this.thresholds = DEFAULT_THRESHOLDS;
   }
 
   async initialize(): Promise<void> {
@@ -42,6 +61,12 @@ export class BundleSizeHistory {
         // File doesn't exist yet, start with empty history
       }
 
+      // Check for alerts before adding new entry
+      if (history.length > 0) {
+        const previousEntry = history[history.length - 1];
+        this.checkForAlerts(stats, previousEntry);
+      }
+
       history.push({ timestamp, ...stats });
 
       // Keep only the latest entries based on maxEntries
@@ -50,8 +75,170 @@ export class BundleSizeHistory {
       }
 
       await writeFile(historyFile, JSON.stringify(history, null, 2));
+      
+      // Save alerts
+      await this.saveAlerts();
     } catch (error: any) {
       throw new Error(`Failed to save history: ${error.message}`);
+    }
+  }
+
+  private async saveAlerts(): Promise<void> {
+    const alertsFile = join(this.historyPath, 'alerts.json');
+    try {
+      await writeFile(alertsFile, JSON.stringify(this.alerts, null, 2));
+    } catch (error: any) {
+      throw new Error(`Failed to save alerts: ${error.message}`);
+    }
+  }
+
+  private checkForAlerts(currentStats: BundleStats, previousStats: BundleStats & { timestamp: string }): void {
+    // Check total size increase
+    const totalSizeChange = ((currentStats.totalSize - previousStats.totalSize) / previousStats.totalSize) * 100;
+    if (totalSizeChange > this.thresholds.totalSizeIncreaseThreshold) {
+      this.alerts.push({
+        type: 'total-size-increase',
+        severity: 'warning',
+        message: `Total bundle size increased by ${totalSizeChange.toFixed(2)}%`,
+        details: {
+          timestamp: new Date().toISOString(),
+          previousValue: previousStats.totalSize,
+          currentValue: currentStats.totalSize,
+          threshold: this.thresholds.totalSizeIncreaseThreshold,
+          percentageChange: totalSizeChange
+        }
+      });
+    }
+
+    // Check max total size
+    if (currentStats.totalSize > this.thresholds.maxTotalSize) {
+      this.alerts.push({
+        type: 'max-size-exceeded',
+        severity: 'error',
+        message: `Total bundle size (${currentStats.totalSize}) exceeds maximum allowed size (${this.thresholds.maxTotalSize})`,
+        details: {
+          timestamp: new Date().toISOString(),
+          currentValue: currentStats.totalSize,
+          threshold: this.thresholds.maxTotalSize
+        }
+      });
+    }
+
+    // Check individual chunks
+    currentStats.chunks.forEach(currentChunk => {
+      const previousChunk = previousStats.chunks.find(c => c.name === currentChunk.name);
+      if (previousChunk) {
+        const chunkSizeChange = ((currentChunk.size - previousChunk.size) / previousChunk.size) * 100;
+        if (chunkSizeChange > this.thresholds.chunkSizeIncreaseThreshold) {
+          this.alerts.push({
+            type: 'chunk-size-increase',
+            severity: 'warning',
+            message: `Chunk "${currentChunk.name}" size increased by ${chunkSizeChange.toFixed(2)}%`,
+            details: {
+              timestamp: new Date().toISOString(),
+              previousValue: previousChunk.size,
+              currentValue: currentChunk.size,
+              threshold: this.thresholds.chunkSizeIncreaseThreshold,
+              percentageChange: chunkSizeChange,
+              chunkName: currentChunk.name
+            }
+          });
+        }
+      }
+
+      if (currentChunk.size > this.thresholds.maxChunkSize) {
+        this.alerts.push({
+          type: 'max-chunk-size-exceeded',
+          severity: 'error',
+          message: `Chunk "${currentChunk.name}" size (${currentChunk.size}) exceeds maximum allowed size (${this.thresholds.maxChunkSize})`,
+          details: {
+            timestamp: new Date().toISOString(),
+            currentValue: currentChunk.size,
+            threshold: this.thresholds.maxChunkSize,
+            chunkName: currentChunk.name
+          }
+        });
+      }
+    });
+  }
+
+  async getAlerts(): Promise<Alert[]> {
+    const alertsFile = join(this.historyPath, 'alerts.json');
+    try {
+      const data = await readFile(alertsFile, 'utf8');
+      return JSON.parse(data);
+    } catch (error) {
+      return [];
+    }
+  }
+
+  async setThresholds(thresholds: Partial<AlertThresholds>): Promise<void> {
+    this.thresholds = {
+      ...this.thresholds,
+      ...thresholds
+    };
+  }
+
+  async exportHistory(): Promise<ExportData> {
+    const historyFile = join(this.historyPath, 'history.json');
+    try {
+      const data = await readFile(historyFile, 'utf8');
+      const history = JSON.parse(data);
+      const alerts = await this.getAlerts();
+
+      return {
+        version: '1.0.0',
+        exportDate: new Date().toISOString(),
+        history,
+        alerts,
+        thresholds: this.thresholds
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to export history: ${error.message}`);
+    }
+  }
+
+  async importHistory(data: ExportData): Promise<ImportResult> {
+    try {
+      // Validate data
+      if (!data.version || !data.history || !Array.isArray(data.history)) {
+        return {
+          success: false,
+          message: 'Invalid export data format',
+          entriesImported: 0,
+          alerts: []
+        };
+      }
+
+      // Import history
+      const historyFile = join(this.historyPath, 'history.json');
+      await writeFile(historyFile, JSON.stringify(data.history, null, 2));
+
+      // Import alerts
+      this.alerts = data.alerts || [];
+      await this.saveAlerts();
+
+      // Import thresholds
+      if (data.thresholds) {
+        this.thresholds = {
+          ...this.thresholds,
+          ...data.thresholds
+        };
+      }
+
+      return {
+        success: true,
+        message: 'History imported successfully',
+        entriesImported: data.history.length,
+        alerts: this.alerts
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Failed to import history: ${error.message}`,
+        entriesImported: 0,
+        alerts: []
+      };
     }
   }
 
@@ -141,11 +328,17 @@ export class BundleSizeHistory {
         );
       }
 
-      // Calculate summary before pagination
+      // Calculate summary
       const summary = {
-        averageSize: history.reduce((sum: number, entry) => sum + entry.totalSize, 0) / history.length,
-        minSize: Math.min(...history.map(entry => entry.totalSize)),
-        maxSize: Math.max(...history.map(entry => entry.totalSize)),
+        averageSize: history.length > 0 
+          ? history.reduce((sum, entry) => sum + entry.totalSize, 0) / history.length 
+          : 0,
+        minSize: history.length > 0 
+          ? Math.min(...history.map(entry => entry.totalSize))
+          : 0,
+        maxSize: history.length > 0 
+          ? Math.max(...history.map(entry => entry.totalSize))
+          : 0,
         totalEntries: history.length
       };
 
@@ -205,6 +398,23 @@ export class BundleSizeHistory {
         summary
       };
     } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return {
+          entries: [],
+          total: 0,
+          pagination: {
+            limit: query.limit || 10,
+            offset: query.offset || 0,
+            hasMore: false
+          },
+          summary: {
+            averageSize: 0,
+            minSize: 0,
+            maxSize: 0,
+            totalEntries: 0
+          }
+        };
+      }
       throw new Error(`Failed to query history: ${error.message}`);
     }
   }
@@ -225,23 +435,33 @@ export class BundleSizeHistory {
       
       return Array.from(chunkNames).sort();
     } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return [];
+      }
       throw new Error(`Failed to get chunk names: ${error.message}`);
     }
   }
 
-  async getDateRange(): Promise<{ earliest: Date; latest: Date }> {
+  async getDateRange(): Promise<{ earliest: Date | null; latest: Date | null }> {
     const historyFile = join(this.historyPath, 'history.json');
     
     try {
       const data = await readFile(historyFile, 'utf8');
       const history: (BundleStats & { timestamp: string })[] = JSON.parse(data);
       
+      if (history.length === 0) {
+        return { earliest: null, latest: null };
+      }
+
       const timestamps = history.map(entry => new Date(entry.timestamp).getTime());
       return {
         earliest: new Date(Math.min(...timestamps)),
         latest: new Date(Math.max(...timestamps))
       };
     } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return { earliest: null, latest: null };
+      }
       throw new Error(`Failed to get date range: ${error.message}`);
     }
   }
@@ -253,6 +473,10 @@ export class BundleSizeHistory {
       const data = await readFile(historyFile, 'utf8');
       const history: BundleStats[] = JSON.parse(data);
       
+      if (history.length === 0) {
+        return { min: 0, max: 0, average: 0 };
+      }
+
       const sizes = history.map(entry => entry.totalSize);
       return {
         min: Math.min(...sizes),
@@ -260,6 +484,9 @@ export class BundleSizeHistory {
         average: sizes.reduce((a, b) => a + b, 0) / sizes.length
       };
     } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return { min: 0, max: 0, average: 0 };
+      }
       throw new Error(`Failed to get size range: ${error.message}`);
     }
   }
