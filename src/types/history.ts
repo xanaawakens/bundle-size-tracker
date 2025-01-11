@@ -10,7 +10,7 @@ export interface BundleStats {
       size: number;
     }[];
   }[];
-  [key: string]: any;
+  [key: string]: number | string | BundleStats['chunks'];
 }
 
 export interface HistoryOptions {
