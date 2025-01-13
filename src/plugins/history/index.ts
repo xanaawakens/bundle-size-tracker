@@ -43,8 +43,11 @@ export class BundleSizeHistory {
   async initialize(): Promise<void> {
     try {
       await mkdir(this.historyPath, { recursive: true });
-    } catch (error: any) {
-      throw new Error(`Failed to create history directory: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to create history directory: ${error.message}`);
+      }
+      throw error;
     }
   }
 
@@ -53,7 +56,7 @@ export class BundleSizeHistory {
     const historyFile = join(this.historyPath, 'history.json');
     
     try {
-      let history = [];
+      let history: Array<BundleStats & { timestamp: string }> = [];
       try {
         const data = await readFile(historyFile, 'utf8');
         history = JSON.parse(data);
@@ -78,8 +81,11 @@ export class BundleSizeHistory {
       
       // Save alerts
       await this.saveAlerts();
-    } catch (error: any) {
-      throw new Error(`Failed to save history: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to save history: ${error.message}`);
+      }
+      throw error;
     }
   }
 
@@ -87,8 +93,11 @@ export class BundleSizeHistory {
     const alertsFile = join(this.historyPath, 'alerts.json');
     try {
       await writeFile(alertsFile, JSON.stringify(this.alerts, null, 2));
-    } catch (error: any) {
-      throw new Error(`Failed to save alerts: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to save alerts: ${error.message}`);
+      }
+      throw error;
     }
   }
 
@@ -193,8 +202,11 @@ export class BundleSizeHistory {
         alerts,
         thresholds: this.thresholds
       };
-    } catch (error: any) {
-      throw new Error(`Failed to export history: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to export history: ${error.message}`);
+      }
+      throw error;
     }
   }
 
@@ -232,13 +244,16 @@ export class BundleSizeHistory {
         entriesImported: data.history.length,
         alerts: this.alerts
       };
-    } catch (error: any) {
-      return {
-        success: false,
-        message: `Failed to import history: ${error.message}`,
-        entriesImported: 0,
-        alerts: []
-      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: `Failed to import history: ${error.message}`,
+          entriesImported: 0,
+          alerts: []
+        };
+      }
+      throw error;
     }
   }
 
@@ -247,7 +262,7 @@ export class BundleSizeHistory {
     
     try {
       const data = await readFile(historyFile, 'utf8');
-      const history = JSON.parse(data);
+      const history: Array<BundleStats & { timestamp: string }> = JSON.parse(data);
 
       if (history.length < 2) {
         return {
@@ -275,8 +290,11 @@ export class BundleSizeHistory {
         averageSize,
         recommendations
       };
-    } catch (error: any) {
-      throw new Error(`Failed to analyze trends: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to analyze trends: ${error.message}`);
+      }
+      throw error;
     }
   }
 
@@ -285,10 +303,13 @@ export class BundleSizeHistory {
     
     try {
       const data = await readFile(historyFile, 'utf8');
-      const history = JSON.parse(data);
+      const history: Array<BundleStats & { timestamp: string }> = JSON.parse(data);
       return await this.visualizer.generateReport(history);
-    } catch (error: any) {
-      throw new Error(`Failed to generate report: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to generate report: ${error.message}`);
+      }
+      throw error;
     }
   }
 
@@ -297,94 +318,81 @@ export class BundleSizeHistory {
     
     try {
       const data = await readFile(historyFile, 'utf8');
-      let history: (BundleStats & { timestamp: string })[] = JSON.parse(data);
+      let history: Array<BundleStats & { timestamp: string }> = JSON.parse(data);
 
       // Apply date filters
       if (query.startDate) {
-        history = history.filter(entry => 
-          new Date(entry.timestamp) >= query.startDate!
-        );
+        history = history.filter(entry => new Date(entry.timestamp) >= query.startDate!);
       }
       if (query.endDate) {
-        history = history.filter(entry => 
-          new Date(entry.timestamp) <= query.endDate!
-        );
+        history = history.filter(entry => new Date(entry.timestamp) <= query.endDate!);
       }
 
       // Apply size filters
-      if (query.minSize) {
+      if (query.minSize !== undefined) {
         history = history.filter(entry => entry.totalSize >= query.minSize!);
       }
-      if (query.maxSize) {
+      if (query.maxSize !== undefined) {
         history = history.filter(entry => entry.totalSize <= query.maxSize!);
       }
 
       // Apply chunk filters
       if (query.chunkNames && query.chunkNames.length > 0) {
         history = history.filter(entry =>
-          entry.chunks.some(chunk => 
-            query.chunkNames!.includes(chunk.name)
-          )
+          entry.chunks.some(chunk => query.chunkNames!.includes(chunk.name))
         );
       }
 
       // Calculate summary
       const summary = {
-        averageSize: history.length > 0 
-          ? history.reduce((sum, entry) => sum + entry.totalSize, 0) / history.length 
-          : 0,
-        minSize: history.length > 0 
-          ? Math.min(...history.map(entry => entry.totalSize))
-          : 0,
-        maxSize: history.length > 0 
-          ? Math.max(...history.map(entry => entry.totalSize))
-          : 0,
+        averageSize: 0,
+        minSize: 0,
+        maxSize: 0,
         totalEntries: history.length
       };
 
+      if (history.length > 0) {
+        const sizes = history.map(entry => entry.totalSize);
+        summary.averageSize = sizes.reduce((a, b) => a + b, 0) / sizes.length;
+        summary.minSize = Math.min(...sizes);
+        summary.maxSize = Math.max(...sizes);
+      }
+
       // Apply sorting
-      const sortBy = query.sortBy || 'date';
-      const sortOrder = query.sortOrder || 'desc';
-      
-      history.sort((a, b) => {
-        let valueA: number | Date, valueB: number | Date;
-        
-        switch (sortBy) {
-          case 'date':
-            valueA = new Date(a.timestamp);
-            valueB = new Date(b.timestamp);
-            break;
-          case 'totalSize':
-            valueA = a.totalSize;
-            valueB = b.totalSize;
-            break;
-          case 'gzipSize':
-            valueA = a.gzipSize;
-            valueB = b.gzipSize;
-            break;
-          case 'brotliSize':
-            valueA = a.brotliSize;
-            valueB = b.brotliSize;
-            break;
-          default:
-            valueA = new Date(a.timestamp);
-            valueB = new Date(b.timestamp);
-        }
+      if (query.sortBy) {
+        history.sort((a, b) => {
+          let valueA: number;
+          let valueB: number;
 
-        if (valueA instanceof Date && valueB instanceof Date) {
-          return sortOrder === 'asc' 
-            ? valueA.getTime() - valueB.getTime()
-            : valueB.getTime() - valueA.getTime();
-        }
+          switch (query.sortBy) {
+            case 'date':
+              valueA = new Date(a.timestamp).getTime();
+              valueB = new Date(b.timestamp).getTime();
+              break;
+            case 'totalSize':
+              valueA = a.totalSize;
+              valueB = b.totalSize;
+              break;
+            case 'gzipSize':
+              valueA = a.gzipSize;
+              valueB = b.gzipSize;
+              break;
+            case 'brotliSize':
+              valueA = a.brotliSize;
+              valueB = b.brotliSize;
+              break;
+            default:
+              valueA = a.totalSize;
+              valueB = b.totalSize;
+          }
 
-        return sortOrder === 'asc' 
-          ? (valueA as number) - (valueB as number)
-          : (valueB as number) - (valueA as number);
-      });
+          return query.sortOrder === 'desc' ? valueB - valueA : valueA - valueB;
+        });
+      }
 
       // Apply pagination
-      const limit = query.limit || 10;
       const offset = query.offset || 0;
+      const limit = query.limit || 10;
       const paginatedHistory = history.slice(offset, offset + limit);
 
       return {
@@ -397,8 +405,8 @@ export class BundleSizeHistory {
         },
         summary
       };
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error: unknown) {
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
         return {
           entries: [],
           total: 0,
@@ -415,7 +423,10 @@ export class BundleSizeHistory {
           }
         };
       }
-      throw new Error(`Failed to query history: ${error.message}`);
+      if (error instanceof Error) {
+        throw new Error(`Failed to query history: ${error.message}`);
+      }
+      throw error;
     }
   }
 
@@ -424,7 +435,7 @@ export class BundleSizeHistory {
     
     try {
       const data = await readFile(historyFile, 'utf8');
-      const history: BundleStats[] = JSON.parse(data);
+      const history: Array<BundleStats & { timestamp: string }> = JSON.parse(data);
       
       const chunkNames = new Set<string>();
       history.forEach(entry => {
@@ -434,11 +445,14 @@ export class BundleSizeHistory {
       });
       
       return Array.from(chunkNames).sort();
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error: unknown) {
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
         return [];
       }
-      throw new Error(`Failed to get chunk names: ${error.message}`);
+      if (error instanceof Error) {
+        throw new Error(`Failed to get chunk names: ${error.message}`);
+      }
+      throw error;
     }
   }
 
@@ -447,7 +461,7 @@ export class BundleSizeHistory {
     
     try {
       const data = await readFile(historyFile, 'utf8');
-      const history: (BundleStats & { timestamp: string })[] = JSON.parse(data);
+      const history: Array<BundleStats & { timestamp: string }> = JSON.parse(data);
       
       if (history.length === 0) {
         return { earliest: null, latest: null };
@@ -458,11 +472,14 @@ export class BundleSizeHistory {
         earliest: new Date(Math.min(...timestamps)),
         latest: new Date(Math.max(...timestamps))
       };
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error: unknown) {
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
         return { earliest: null, latest: null };
       }
-      throw new Error(`Failed to get date range: ${error.message}`);
+      if (error instanceof Error) {
+        throw new Error(`Failed to get date range: ${error.message}`);
+      }
+      throw error;
     }
   }
 
@@ -471,7 +488,7 @@ export class BundleSizeHistory {
     
     try {
       const data = await readFile(historyFile, 'utf8');
-      const history: BundleStats[] = JSON.parse(data);
+      const history: Array<BundleStats & { timestamp: string }> = JSON.parse(data);
       
       if (history.length === 0) {
         return { min: 0, max: 0, average: 0 };
@@ -483,11 +500,14 @@ export class BundleSizeHistory {
         max: Math.max(...sizes),
         average: sizes.reduce((a, b) => a + b, 0) / sizes.length
       };
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error: unknown) {
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
         return { min: 0, max: 0, average: 0 };
       }
-      throw new Error(`Failed to get size range: ${error.message}`);
+      if (error instanceof Error) {
+        throw new Error(`Failed to get size range: ${error.message}`);
+      }
+      throw error;
     }
   }
 
@@ -500,7 +520,7 @@ export class BundleSizeHistory {
   private generateRecommendations(
     trend: string,
     percentageChange: number,
-    history: BundleStats[]
+    history: Array<BundleStats & { timestamp: string }>
   ): string[] {
     const recommendations: string[] = [];
 

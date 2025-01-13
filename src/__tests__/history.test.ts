@@ -1,8 +1,8 @@
 import { BundleSizeHistory } from '../plugins/history';
-import { BundleStats } from '../types/history';
 import { mkdir, writeFile, rm } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
+import { ExportData } from '../types/history';
 
 describe('BundleSizeHistory', () => {
   let history: BundleSizeHistory;
@@ -264,7 +264,8 @@ describe('BundleSizeHistory', () => {
     });
 
     it('should handle invalid import data', async () => {
-      const result = await history.importHistory({} as any);
+      const invalidData = {} as Partial<ExportData>;
+      const result = await history.importHistory(invalidData as ExportData);
       expect(result.success).toBe(false);
       expect(result.message).toContain('Invalid export data format');
     });

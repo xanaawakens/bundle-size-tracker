@@ -7,6 +7,27 @@ export interface AIAnalyzerOptions {
   temperature?: number;
 }
 
+interface CodeSplittingResult {
+  splitPoints: string[];
+  impact: Array<{
+    path: string;
+    sizeReduction: number;
+  }>;
+}
+
+interface TreeShakingResult {
+  unusedExports: Array<{
+    module: string;
+    exports: string[];
+  }>;
+  potentialSavings: number;
+}
+
+interface ImpactEstimation {
+  sizeReduction: number;
+  performanceImprovement: number;
+}
+
 export class AIBundleAnalyzer {
   private openai: OpenAI;
   private model: string;
@@ -98,7 +119,7 @@ export class AIBundleAnalyzer {
       .map(line => line.trim());
   }
 
-  private parseCodeSplitting(suggestions: string): any {
+  private parseCodeSplitting(suggestions: string): CodeSplittingResult {
     const lines = suggestions.split('\n').filter(line => line.trim());
     const splitPoints = lines
       .filter(line => line.includes('/'))
@@ -116,7 +137,7 @@ export class AIBundleAnalyzer {
     };
   }
 
-  private parseTreeShaking(suggestions: string): any {
+  private parseTreeShaking(suggestions: string): TreeShakingResult {
     const lines = suggestions.split('\n').filter(line => line.trim());
     const unusedExports = lines
       .filter(line => line.includes('export'))
@@ -124,20 +145,17 @@ export class AIBundleAnalyzer {
         const [module, ...exports] = line.split(':').map(s => s.trim());
         return {
           module,
-          exports: exports[0].split(',').map(e => e.trim())
+          exports: exports.join(':').split(',').map(e => e.trim())
         };
       });
 
     return {
       unusedExports,
-      potentialSavings: unusedExports.length * 1000 // Example estimation
+      potentialSavings: unusedExports.length * 1024 // Example estimation
     };
   }
 
-  private estimateImpact(suggestions: string, bundleInfo: BundleInfo): {
-    sizeReduction: number;
-    performanceImprovement: number;
-  } {
+  private estimateImpact(suggestions: string, bundleInfo: BundleInfo): ImpactEstimation {
     const totalSize = bundleInfo.size.raw;
     const codeSplitting = this.parseCodeSplitting(suggestions);
     const treeShaking = this.parseTreeShaking(suggestions);
