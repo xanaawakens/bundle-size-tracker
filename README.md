@@ -48,13 +48,27 @@ A powerful and flexible tool to track and analyze JavaScript bundle sizes across
 - Historical trend analysis
 - Size comparison across builds
 
-### Performance Features ⚡️
-- Preact compatibility layer for React apps
-- Optimized chunk splitting strategies
-- Advanced tree shaking configuration
-- Styled-components optimization
-- Dynamic imports and code splitting
-- Bundle size reduction up to 50%
+### Real User Monitoring 📈 (New in v0.1.4)
+- Track real-world performance metrics:
+  - Load time
+  - First Contentful Paint (FCP)
+  - Largest Contentful Paint (LCP)
+  - First Input Delay (FID)
+  - Cumulative Layout Shift (CLS)
+  - Time to Interactive (TTI)
+  - Total Blocking Time (TBT)
+- Device and network analysis:
+  - Device type detection
+  - Network connection speed
+  - Hardware capabilities
+- Performance recommendations:
+  - Automated performance insights
+  - Device-specific optimizations
+  - Network-based suggestions
+- Customizable data collection:
+  - Configurable sampling rate
+  - Pattern-based URL filtering
+  - Custom endpoint support
 
 ## Installation
 
@@ -87,6 +101,12 @@ module.exports = {
           totalSizeIncreaseThreshold: 10, // 10% increase warning
           maxTotalSize: 5 * 1024 * 1024 // 5MB limit
         }
+      },
+      rum: {
+        enabled: true,
+        sampleRate: 0.1, // Sample 10% of users
+        endpoint: '/api/rum', // Optional custom endpoint
+        excludePatterns: ['/api/*', '/static/*'] // Optional URL patterns to exclude
       }
     })
   ]
@@ -110,6 +130,10 @@ export default {
         thresholds: {
           chunkSizeIncreaseThreshold: 15 // 15% chunk size increase warning
         }
+      },
+      rum: {
+        enabled: true,
+        sampleRate: 0.5 // Sample 50% of users
       }
     })
   ]
@@ -129,6 +153,11 @@ export default {
       history: {
         enabled: true,
         exportPath: './bundle-history'
+      },
+      rum: {
+        enabled: true,
+        sampleRate: 1, // Monitor all users
+        excludePatterns: ['/admin/*'] // Exclude admin pages
       }
     })
   ]
@@ -147,6 +176,15 @@ export default {
 | `history.thresholds.chunkSizeIncreaseThreshold` | number | `15` | Percentage threshold for chunk size increase warning |
 | `history.thresholds.maxTotalSize` | number | `5242880` | Maximum allowed total size in bytes (5MB) |
 | `history.thresholds.maxChunkSize` | number | `2097152` | Maximum allowed chunk size in bytes (2MB) |
+
+### RUM Configuration
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `rum.enabled` | boolean | `false` | Enable Real User Monitoring |
+| `rum.sampleRate` | number | `1` | Percentage of users to monitor (0 to 1) |
+| `rum.endpoint` | string | undefined | Custom endpoint for sending RUM data |
+| `rum.excludePatterns` | string[] | `[]` | URL patterns to exclude from monitoring |
 
 ### AI Configuration
 
@@ -194,192 +232,30 @@ You can set specific size limits for different bundles:
 ```
 Bundle Size Report
 
-Generated: 2025-01-02T04:12:22.777Z
+Generated: 2025-01-13T15:52:18+07:00
 Status: PASS 
 Total Size: 264.09 KB
 
 main.js
-Size: 58.94 KB
-Limit: 400KB
-Status: Within limit
+  Raw: 120.5 KB
+  Gzip: 45.2 KB
+  Brotli: 40.1 KB
+  Status: PASS 
 
 vendor.js
-Size: 204.58 KB
-Limit: 400KB
-Status: Within limit
+  Raw: 143.59 KB
+  Gzip: 52.8 KB
+  Brotli: 48.3 KB
+  Status: PASS 
 
-AI Suggestions:
-- Split vendor chunks for better caching
-- Remove unused moment.js locales
-- Implement dynamic imports for route components
+Performance Metrics (RUM):
+  Load Time (median): 1.2s
+  First Contentful Paint: 0.8s
+  Largest Contentful Paint: 2.1s
+  First Input Delay: 45ms
+  Cumulative Layout Shift: 0.05
 ```
-
-### HTML Report Features
-- Visual representation of bundle sizes
-- Size trends over time
-- AI optimization suggestions
-- Interactive charts and graphs
-- Detailed bundle breakdown
-- Color-coding for bundles exceeding limits
-- Performance metrics and trends
-- Dependency analysis visualization
-
-### JSON Report Example
-```json
-{
-  "timestamp": "2025-01-02T04:12:13.436Z",
-  "bundles": [
-    {
-      "name": "main.js",
-      "size": 169160,
-      "exceedsLimit": false,
-      "sizeLimit": 300,
-      "compression": {
-        "gzip": 45200,
-        "brotli": 40100
-      }
-    }
-  ],
-  "status": "pass",
-  "totalSize": 169160,
-  "aiSuggestions": [
-    "Split vendor chunks for better caching",
-    "Remove unused exports",
-    "Use dynamic imports for routes"
-  ],
-  "performance": {
-    "loadTime": "1.2s",
-    "firstContentfulPaint": "0.8s"
-  }
-}
-```
-
-## Test Project
-
-The repository includes a test project that demonstrates all features:
-
-```bash
-cd test-projects/ai-test
-npm install
-npm run build
-```
-
-The test project showcases:
-- React/Preact compatibility
-- MUI components optimization
-- Dynamic imports
-- Tree shaking
-- Code splitting
-- Bundle size optimization
-- AI-powered suggestions
-- Custom rules implementation
-- Multiple output formats
-
-## Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-### Development Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/avixiii-dev/bundle-size-tracker.git
-
-# Install dependencies
-npm install
-
-# Build
-npm run build
-
-# Run tests
-npm test
-
-# Run tests with coverage
-npm test -- --coverage
-
-# Run linter
-npm run lint
-
-# Generate documentation
-npm run docs
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-npm test
-
-# Run specific test
-npm test -- -t "test name"
-
-# Watch mode
-npm test -- --watch
-
-# Coverage report
-npm test -- --coverage
-```
-
-## Changelog
-
-### v0.1.3 (2025-01-02)
-- Added history tracking feature
-- Added alerts for total size increases and chunk size changes
-- Improved HTML reports with interactive charts
-- Enhanced AI-powered optimization suggestions
-- Added new CLI options for history and alerts
-- Improved error handling and reporting
-- Updated dependencies to latest versions
-
-### v0.1.2 (2025-01-02)
-- Added AI-powered bundle analysis
-- Added Preact compatibility layer
-- Improved code splitting strategies
-- Added styled-components optimization
-- Added tree shaking improvements
-- Added test project with optimization examples
-- Reduced bundle sizes by up to 50%
-- Enhanced HTML reports with interactive features
-- Added new CLI options for AI analysis
-- Improved error handling and reporting
-- Added TypeScript type definitions
-- Updated dependencies to latest versions
-
-### v0.1.1
-- Initial release
-- Basic bundle size tracking
-- Size limits and warnings
-- Compression format support
-- Basic reporting features
-- Command-line interface
-- Configuration options
-- Documentation
-
-## Support
-
-- Create an [Issue](https://github.com/avixiii-dev/bundle-size-tracker/issues) for bug reports and feature requests
-- Star the project if you find it useful
-- Follow [@avixiii-dev](https://github.com/avixiii-dev) for updates
-<!-- - Join our [Discord community](https://discord.gg/bundlesize) for help -->
-<!-- - Read our [blog posts](https://dev.to/avixiii) for tips and tutorials -->
-
-## Security
-
-Please report security vulnerabilities to avixiii@proton.me. We take security seriously and will respond promptly.
 
 ## License
 
-MIT  [Tuan](https://github.com/avixiii-dev)
-
-See [LICENSE](LICENSE) for more details.
-
-<!-- ## Acknowledgments
-
-- Thanks to all contributors
-- Inspired by [webpack-bundle-analyzer](https://github.com/webpack-contrib/webpack-bundle-analyzer) -->
+MIT  [avixiii](https://github.com/avixiii-dev)
