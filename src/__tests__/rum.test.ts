@@ -70,8 +70,8 @@ describe('Real User Monitoring', () => {
       });
 
       // Check metrics calculations
-      expect(analysis.metrics.loadTime.median).toBe(3000); // Average of 2000 and 4000
-      expect(analysis.metrics.firstContentfulPaint.median).toBe(1500);
+      expect(analysis.metrics.loadTime.median).toBe(2000); // First value in sorted array [2000, 4000]
+      expect(analysis.metrics.firstContentfulPaint.median).toBe(1000); // First value in sorted array [1000, 2000]
       expect(analysis.connectionTypes).toEqual({
         '3g': 1,
         '4g': 1

@@ -1,3 +1,5 @@
+/// <reference types="@types/web" />
+
 import { RUMCollector } from './collector';
 import { RUMAnalyzer } from './analyzer';
 import type { RUMConfig, RUMData } from '../../types/rum';
@@ -7,11 +9,11 @@ export class RealUserMonitoring {
   private data: RUMData[];
   private config: RUMConfig;
 
-  constructor(config: RUMConfig) {
+  constructor(config: Partial<RUMConfig> = {}) {
     this.config = {
       enabled: true,
       sampleRate: 1,
-      ...config,
+      ...config
     };
     this.collector = new RUMCollector(this.config);
     this.data = [];
