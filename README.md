@@ -70,6 +70,9 @@ A powerful and flexible tool to track and analyze JavaScript bundle sizes across
   - Pattern-based URL filtering
   - Custom endpoint support
 
+
+## Documents
+
 ## Installation
 
 ```bash
